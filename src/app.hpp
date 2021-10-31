@@ -4,6 +4,7 @@
 #include <DirectIO.h>
 #include <TaskSchedulerDeclarations.h>
 
+#include "aqueduct.hpp"
 #include "blink.hpp"
 #include "chrono.hpp"
 #include "config.hpp"
@@ -24,8 +25,10 @@ private:
   Io<> io;
 
   MainTankControl<> mtc{sch, io};
-  SerialUi<> tSerialUi{sch, mtc};
-  ScreenUi<> tScreenUi{sch, mtc};
+  AqueductControl<> aqueduct{sch, io};
+
+  SerialUi<> tSerialUi{sch, mtc, aqueduct};
+  ScreenUi<> tScreenUi{sch, mtc, aqueduct};
 
 };
 

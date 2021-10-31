@@ -12,11 +12,11 @@ template<typename = void>
 class ScreenUi : public Task {
   static constexpr chr::milliseconds period = 100_ms;
 public:
-  ScreenUi(Scheduler& sch, MainTankControl<void>& mtc)
+  ScreenUi(Scheduler& sch, MainTankControl<void>& mtc, AqueductControl<void>& aqueduct)
     : Task{period.count(), TASK_FOREVER, &sch, true}
     , fsm{ScreenFsm::fsm}
   {
-    ScreenFsm::init(mtc);
+    ScreenFsm::init(mtc, aqueduct);
   }
 
   auto Callback() -> bool {

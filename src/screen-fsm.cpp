@@ -3,6 +3,7 @@
 #include <Nextion.h>
 #include <estd/array.h>
 
+#include "aqueduct.hpp"
 #include "config.hpp"
 #include "mtc.hpp"
 #include "timer.hpp"
@@ -12,6 +13,7 @@ namespace kev {
 namespace ScreenFsm {
 
   MainTankControl<>* mtc;
+  AqueductControl<>* aqueduct;
 
   NexPage pgHome{0, 0, "home"};
   NexButton fill1{1, 2, "llenar1"};
@@ -20,6 +22,7 @@ namespace ScreenFsm {
   NexButton recirTank2{3, 3, "recir2"};
   NexButton timeShort{4, 2, "timeShort"};
   NexButton timeLong{4, 3, "timeLong"};
+  NexDSButton aqueductBtn{0, 5, "aqueduct"};
 
   NexTouch* menusTouchables[] = {
     &fill1,
@@ -28,6 +31,7 @@ namespace ScreenFsm {
     &recirTank2,
     &timeShort,
     &timeLong,
+    &aqueductBtn,
     nullptr,
   };
 
@@ -139,6 +143,11 @@ namespace ScreenFsm {
     mtc->stop();
   }
 
+  auto onAqueductBtn() {
+    auto const startedFilling = aqueduct->toggle();
+    aqueductBtn.setValue(startedFilling);
+  }
+
   State menus{"MENUS", onMenus, duringMenus};
   State filling{"FILLING", nullptr, duringFilling};
   State recir{"RECIR", nullptr, duringRecir};
@@ -161,20 +170,23 @@ namespace ScreenFsm {
       Serial.println("[ui-state-machine] screen not found");
     }
 
-    fill1.attachPop     ([](void*){ fsm.trigger(E::FILL_1); });
-    fill2.attachPop     ([](void*){ fsm.trigger(E::FILL_2); });
-    recirTank1.attachPop([](void*){ recirTank = RecirTank::Tank1; });
-    recirTank2.attachPop([](void*){ recirTank = RecirTank::Tank2; });
-    timeShort.attachPop ([](void*){ fsm.trigger(E::RECIR_SHORT); });
-    timeLong.attachPop  ([](void*){ fsm.trigger(E::RECIR_LONG); });
+    fill1.attachPop      ([](void*){ fsm.trigger(E::FILL_1); });
+    fill2.attachPop      ([](void*){ fsm.trigger(E::FILL_2); });
+    recirTank1.attachPop ([](void*){ recirTank = RecirTank::Tank1; });
+    recirTank2.attachPop ([](void*){ recirTank = RecirTank::Tank2; });
+    timeShort.attachPop  ([](void*){ fsm.trigger(E::RECIR_SHORT); });
+    timeLong.attachPop   ([](void*){ fsm.trigger(E::RECIR_LONG); });
+    aqueductBtn.attachPop([](void*){ onAqueductBtn(); });
 
     fillingReset.attachPop     ([](void*){ fsm.trigger(E::RESET); });
     recirReset.attachPop       ([](void*){ fsm.trigger(E::RESET); });
     recirSummaryReset.attachPop([](void*){ fsm.trigger(E::EXIT); });
   }
 
-  auto init(MainTankControl<>& mtcParam) -> void {
+  auto init(MainTankControl<>& mtcParam, AqueductControl<>& aqueductParam) -> void {
     mtc = &mtcParam;
+    aqueduct = &aqueductParam;
+
     screenInit();
     updateTimer.start(1_s);
 

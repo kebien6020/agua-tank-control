@@ -3,6 +3,7 @@
 #include <HardwareSerial.h>
 #include <TaskSchedulerDeclarations.h>
 
+#include "aqueduct.hpp"
 #include "chrono.hpp"
 #include "mtc.hpp"
 
@@ -13,9 +14,10 @@ template<typename = void>
 class SerialUi : public Task {
   static constexpr chr::milliseconds period = 100_ms;
 public:
-  SerialUi(Scheduler& sch, MainTankControl<>& mtc)
+  SerialUi(Scheduler& sch, MainTankControl<>& mtc, AqueductControl<>& aqueduct)
     : Task{period.count(), TASK_FOREVER, &sch, true}
     , mtc{mtc}
+    , aqueduct{aqueduct}
     {}
 
   auto Callback() -> bool {
@@ -48,9 +50,12 @@ public:
     if (cmd == "recir2_long") mtc.recir2Long();
     if (cmd == "stop") mtc.stop();
     if (cmd == "clear_alarm") mtc.clearAlarm();
+    if (cmd == "aqueduct_fill") aqueduct.fill();
+    if (cmd == "aqueduct_stop") aqueduct.stop();
   }
 private:
   MainTankControl<>& mtc;
+  AqueductControl<>& aqueduct;
 };
 
 }

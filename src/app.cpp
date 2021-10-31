@@ -6,6 +6,7 @@ namespace kev {
 
 App::App() {
   mtc.setUi(tScreenUi);
+  aqueduct.setUi(tScreenUi);
   Serial.println("[app] initialized");
 }
 
