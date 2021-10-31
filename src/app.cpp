@@ -5,13 +5,8 @@
 namespace kev {
 
 App::App() {
-}
-
-auto App::setup() -> void {
-  Serial.begin(baudrate);
-  // Serial.println("Initialized");
-
-  tBridge.setup();
+  mtc.setUi(tScreenUi);
+  Serial.println("[app] initialized");
 }
 
 auto App::loop() -> void {

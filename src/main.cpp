@@ -1,8 +1,22 @@
-#include <TaskScheduler.h>
+//#define BRIDGE
+#ifdef BRIDGE
 
+#include "bridge.main.hpp"
+
+#else
+
+#include <TaskScheduler.h>
 #include "app.hpp"
 
-kev::App app{};
+void setup() {
+  Serial.begin(kev::config::baudrate);
 
-void setup() { app.setup(); }
-void loop() { app.loop(); }
+  kev::App app{};
+
+  while (true) {
+    app.loop();
+  }
+}
+void loop() { }
+
+#endif
