@@ -9,11 +9,9 @@ namespace config {
   constexpr auto sensorEmpty = false;
 
   constexpr chr::milliseconds preFillTime    = 3_s;
-  constexpr chr::milliseconds recirTimeShort = chr::seconds{3};
-  // constexpr chr::milliseconds recirTimeShort = chr::minutes{5};
+  constexpr chr::milliseconds recirTimeShort = chr::minutes{5};
   constexpr chr::milliseconds recirTimeLong  = chr::minutes{40};
-  constexpr chr::milliseconds fillSafetyTime = chr::seconds{3};
-  //constexpr chr::milliseconds fillSafetyTime = chr::minutes{27};
+  constexpr chr::milliseconds fillSafetyTime = chr::minutes{27};
 
 
   constexpr auto sensorFull = !sensorEmpty;
