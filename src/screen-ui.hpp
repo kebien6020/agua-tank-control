@@ -34,6 +34,11 @@ public:
     fsm.trigger(ScreenFsm::E::RECIR_END);
   }
 
+  auto alarm(String const& msg) {
+    ScreenFsm::setAlarmMsg(msg);
+    fsm.trigger(ScreenFsm::E::ALARM);
+  }
+
 private:
   Fsm& fsm;
 };

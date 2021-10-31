@@ -19,6 +19,7 @@ namespace ScreenFsm {
   auto init(MainTankControl<void>& mtc, AqueductControl<void>& aqueduct) -> void;
   auto setLastRecirTank(RecirTank tank) -> void;
   auto setLastRecirTime(chr::milliseconds time) -> void;
+  auto setAlarmMsg(String const& msg) -> void;
 
   namespace E {
     constexpr auto FILL_1       = Event{1, "FILL_1"};
@@ -26,9 +27,10 @@ namespace ScreenFsm {
     constexpr auto RECIR_SHORT  = Event{3, "RECIR_SHORT"};
     constexpr auto RECIR_LONG   = Event{4, "RECIR_LONG"};
     constexpr auto RECIR_END    = Event{5, "RECIR_END"};
-    constexpr auto AQUEDUCT_BTN = Event{5, "AQUEDUCT_BTN"};
-    constexpr auto EXIT         = Event{6, "EXIT"};
-    constexpr auto RESET        = Event{7, "RESET"};
+    constexpr auto AQUEDUCT_BTN = Event{6, "AQUEDUCT_BTN"};
+    constexpr auto EXIT         = Event{7, "EXIT"};
+    constexpr auto RESET        = Event{8, "RESET"};
+    constexpr auto ALARM        = Event{9, "ALARM"};
   }
 
 }

@@ -70,6 +70,11 @@ namespace MainTankFsm {
 
   auto onAlarm() -> void {
     onStopped();
+    auto const msg =
+      String{"Tiempo de seguridad de llenado superado ("} +
+      String{chr::minutes{config::fillSafetyTime}.count()} +
+      " min).";
+    ui->alarm(msg);
   }
 
   auto uiExit() -> void {

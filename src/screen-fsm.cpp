@@ -61,10 +61,20 @@ namespace ScreenFsm {
     nullptr,
   };
 
+  NexPage alarmPg{7, 0, "alarm"};
+  NexText alarmMsgTxt{7, 2, "text"};
+  NexPage alarmReset{7, 3, "b2"};
+  NexTouch* alarmTouchables[] = {
+    &alarmReset,
+    nullptr,
+  };
+
   auto recirTank = RecirTank::Tank1;
 
   auto lastRecirTank = RecirTank::Tank1;
   auto lastRecirTime = 0_ms;
+
+  auto alarmMsg = String{};
 
   auto setLastRecirTank(RecirTank tank) -> void {
     lastRecirTank = tank;
@@ -72,6 +82,10 @@ namespace ScreenFsm {
 
   auto setLastRecirTime(chr::milliseconds time) -> void {
     lastRecirTime = time;
+  }
+
+  auto setAlarmMsg(String const& msg) -> void {
+    alarmMsg = msg;
   }
 
   auto onMenus() -> void {
@@ -143,6 +157,19 @@ namespace ScreenFsm {
     mtc->stop();
   }
 
+  auto onAlarm() {
+    alarmPg.show();
+    alarmMsgTxt.setText(alarmMsg.c_str());
+  }
+
+  auto duringAlarm() {
+    nexLoop(alarmTouchables);
+  }
+
+  auto onAlarmExit() {
+    mtc->clearAlarm();
+  }
+
   auto onAqueductBtn() {
     auto const startedFilling = aqueduct->toggle();
     aqueductBtn.setValue(startedFilling);
@@ -152,6 +179,7 @@ namespace ScreenFsm {
   State filling{"FILLING", nullptr, duringFilling};
   State recir{"RECIR", nullptr, duringRecir};
   State recirSummary{"RECIR_SUMMARY", onRecirSummary, duringRecirSummary};
+  State alarm{"ALARM", onAlarm, duringAlarm, onAlarmExit};
 
   auto onTransition(State& from, State& to, struct Event event) {
     Serial.print("[ui-state-machine] state transition. from="); Serial.print(from.name);
@@ -181,6 +209,7 @@ namespace ScreenFsm {
     fillingReset.attachPop     ([](void*){ fsm.trigger(E::RESET); });
     recirReset.attachPop       ([](void*){ fsm.trigger(E::RESET); });
     recirSummaryReset.attachPop([](void*){ fsm.trigger(E::EXIT); });
+    alarmReset.attachPop       ([](void*){ fsm.trigger(E::EXIT); });
   }
 
   auto init(MainTankControl<>& mtcParam, AqueductControl<>& aqueductParam) -> void {
@@ -201,6 +230,12 @@ namespace ScreenFsm {
     fsm.add_transition(&recir, &recirSummary, E::RECIR_END);
 
     fsm.add_transition(&recirSummary, &menus, E::EXIT);
+
+    fsm.add_transition(&filling,      &alarm, E::ALARM);
+    fsm.add_transition(&recir,        &alarm, E::ALARM);
+    fsm.add_transition(&recirSummary, &alarm, E::ALARM);
+    fsm.add_transition(&menus,        &alarm, E::ALARM);
+    fsm.add_transition(&alarm,        &menus, E::EXIT);
 
     Serial.print("[ui-state-machine] initialized. initialState=");
     Serial.println(fsm.current_state().name);
