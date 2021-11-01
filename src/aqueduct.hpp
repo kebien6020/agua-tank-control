@@ -42,8 +42,8 @@ public:
     fsm.trigger(AqueductFsm::E::STOP);
   }
 
-  auto toggle() -> bool {
-    if (AqueductFsm::isStopped()) {
+  auto togglePump() -> bool {
+    if (AqueductFsm::isStopped() && io.valveIn3) {
       return fill();
     }
 
@@ -53,6 +53,22 @@ public:
     }
 
     return false;
+  }
+
+  auto setValve(bool active) {
+    if (!active && isFilling()) {
+      // Turn off the pump when turning off the valve
+      stop();
+    }
+    io.valveIn3 = active;
+  }
+
+  auto getValve() -> bool {
+    return io.valveIn3;
+  }
+
+  auto isFilling()-> bool {
+    return AqueductFsm::isFilling();
   }
 
 private:

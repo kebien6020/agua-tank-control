@@ -6,6 +6,7 @@ namespace kev {
 
 using ValveIn1 = OutputLow<23>;
 using ValveIn2 = OutputLow<25>;
+using ValveIn3 = OutputLow<27>;
 using RecirPump1 = OutputLow<29>;
 using RecirPump2 = OutputLow<31>;
 using AqueductPump = OutputLow<33>;
@@ -22,6 +23,7 @@ template<typename = void>
 struct Io {
   ValveIn1 valveIn1;
   ValveIn2 valveIn2;
+  ValveIn3 valveIn3;
   RecirPump1 recirPump1;
   RecirPump2 recirPump2;
   AqueductPump aqueductPump;

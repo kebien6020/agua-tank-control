@@ -16,22 +16,33 @@ namespace ScreenFsm {
   AqueductControl<>* aqueduct;
 
   NexPage pgHome{0, 0, "home"};
+  NexButton aqueductMenu{0, 5, "aqueduct"};
   NexButton fill1{1, 2, "llenar1"};
   NexButton fill2{1, 3, "llenar2"};
   NexButton recirTank1{3, 2, "recir1"};
   NexButton recirTank2{3, 3, "recir2"};
   NexButton timeShort{4, 2, "timeShort"};
   NexButton timeLong{4, 3, "timeLong"};
-  NexDSButton aqueductBtn{0, 5, "aqueduct"};
 
   NexTouch* menusTouchables[] = {
+    &aqueductMenu,
     &fill1,
     &fill2,
     &recirTank1,
     &recirTank2,
     &timeShort,
     &timeLong,
-    &aqueductBtn,
+    nullptr,
+  };
+
+  NexDSButton aqueductValve{8, 3, "valve"};
+  NexDSButton aqueductPump{8, 4, "pump"};
+  NexButton aqueductBack{8, 2, "back"};
+
+  NexTouch* aqueductTouchables[] = {
+    &aqueductValve,
+    &aqueductPump,
+    &aqueductBack,
     nullptr,
   };
 
@@ -172,9 +183,25 @@ namespace ScreenFsm {
     mtc->clearAlarm();
   }
 
-  auto onAqueductBtn() {
-    auto const startedFilling = aqueduct->toggle();
-    aqueductBtn.setValue(startedFilling);
+  auto onAqueduct() {
+    aqueductValve.setValue(aqueduct->getValve());
+    aqueductPump.setValue(aqueduct->isFilling());
+    sendCommand("tsw pump,valve.val"); // Enable pump if valve is enabled
+  }
+
+  auto duringAqueduct() {
+    nexLoop(aqueductTouchables);
+  }
+
+  auto onAqueductValve() {
+    uint32_t value = -1; aqueductValve.getValue(&value);
+    aqueduct->setValve(value == 1);
+    aqueductPump.setValue(aqueduct->isFilling()); // Setting the valve might update the pump
+  }
+
+  auto onAqueductPump() {
+    auto const startedFilling = aqueduct->togglePump();
+    aqueductPump.setValue(startedFilling);
   }
 
   State menus{"MENUS", onMenus, duringMenus};
@@ -182,6 +209,7 @@ namespace ScreenFsm {
   State recir{"RECIR", nullptr, duringRecir};
   State recirSummary{"RECIR_SUMMARY", onRecirSummary, duringRecirSummary};
   State alarm{"ALARM", onAlarm, duringAlarm, onAlarmExit};
+  State aqueductSt{"AQUEDUCT", onAqueduct, duringAqueduct};
 
   auto onTransition(State& from, State& to, struct Event event) {
     Serial.print("[ui-state-machine] state transition. from="); Serial.print(from.name);
@@ -206,7 +234,11 @@ namespace ScreenFsm {
     recirTank2.attachPop ([](void*){ recirTank = RecirTank::Tank2; });
     timeShort.attachPop  ([](void*){ fsm.trigger(E::RECIR_SHORT); });
     timeLong.attachPop   ([](void*){ fsm.trigger(E::RECIR_LONG); });
-    aqueductBtn.attachPop([](void*){ onAqueductBtn(); });
+
+    aqueductMenu.attachPop ([](void*){ fsm.trigger(E::AQUEDUCT_MENU); });
+    aqueductValve.attachPop([](void*){ onAqueductValve(); });
+    aqueductPump.attachPop ([](void*){ onAqueductPump(); });
+    aqueductBack.attachPop ([](void*){ fsm.trigger(E::AQUEDUCT_EXIT); });
 
     fillingReset.attachPop     ([](void*){ fsm.trigger(E::RESET); });
     recirReset.attachPop       ([](void*){ fsm.trigger(E::RESET); });
@@ -238,6 +270,9 @@ namespace ScreenFsm {
     fsm.add_transition(&recirSummary, &alarm, E::ALARM);
     fsm.add_transition(&menus,        &alarm, E::ALARM);
     fsm.add_transition(&alarm,        &menus, E::EXIT);
+
+    fsm.add_transition(&menus,      &aqueductSt, E::AQUEDUCT_MENU);
+    fsm.add_transition(&aqueductSt, &menus,      E::AQUEDUCT_EXIT);
 
     Serial.print("[ui-state-machine] initialized. initialState=");
     Serial.println(fsm.current_state().name);
