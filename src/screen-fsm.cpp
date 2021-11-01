@@ -183,10 +183,13 @@ namespace ScreenFsm {
     mtc->clearAlarm();
   }
 
-  auto onAqueduct() {
+  auto updateAqueductInterface() -> void {
     aqueductValve.setValue(aqueduct->getValve());
-    aqueductPump.setValue(aqueduct->isFilling());
-    sendCommand("tsw pump,valve.val"); // Enable pump if valve is enabled
+    aqueductPump.setValue(aqueduct->getPump());
+  }
+
+  auto onAqueduct() {
+    updateAqueductInterface();
   }
 
   auto duringAqueduct() {
@@ -196,12 +199,13 @@ namespace ScreenFsm {
   auto onAqueductValve() {
     uint32_t value = -1; aqueductValve.getValue(&value);
     aqueduct->setValve(value == 1);
-    aqueductPump.setValue(aqueduct->isFilling()); // Setting the valve might update the pump
+    updateAqueductInterface();
   }
 
   auto onAqueductPump() {
-    auto const startedFilling = aqueduct->togglePump();
-    aqueductPump.setValue(startedFilling);
+    uint32_t value = -1; aqueductPump.getValue(&value);
+    aqueduct->setPump(value == 1);
+    updateAqueductInterface();
   }
 
   State menus{"MENUS", onMenus, duringMenus};

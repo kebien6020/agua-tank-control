@@ -12,11 +12,14 @@ namespace AqueductFsm {
   auto init(Io<>& ioParam, ScreenUi<>& uiParam) -> void;
   auto isStopped() -> bool;
   auto isFilling() -> bool;
+  auto isFillingPump() -> bool;
 
   namespace E {
-    constexpr auto FILL        = Event{1, "FILL"};
-    constexpr auto SENSOR_HI_3 = Event{2, "SENSOR_HI_3"};
-    constexpr auto STOP        = Event{3, "STOP"};
+    constexpr auto VALVE_ON    = Event{1, "VALVE_ON"};
+    constexpr auto VALVE_OFF   = Event{2, "VALVE_OFF"};
+    constexpr auto PUMP_ON     = Event{3, "PUMP_ON"};
+    constexpr auto PUMP_OFF    = Event{4, "PUMP_OFF"};
+    constexpr auto SENSOR_HI_3 = Event{5, "SENSOR_HI_3"};
   }
 }
 

@@ -11,10 +11,18 @@ namespace AqueductFsm {
 
   auto onStopped() {
     io->aqueductPump = false;
+    io->valveIn3 = false;
+    ui->updateAqueductInterface();
   }
 
   auto onFilling() -> void {
-    io->aqueductPump= true;
+    io->valveIn3 = true;
+    io->aqueductPump = false;
+  }
+
+  auto onFillingPump() -> void {
+    io->valveIn3 = true;
+    io->aqueductPump = true;
   }
 
   auto onTransition(State& from, State& to, struct Event event) {
@@ -26,6 +34,7 @@ namespace AqueductFsm {
 
   State stopped{"STOPPED", onStopped};
   State filling{"FILLING", onFilling};
+  State fillingPump{"FILLING_PUMP", onFillingPump};
 
   Fsm fsm{&stopped, onTransition};
 
@@ -39,13 +48,24 @@ namespace AqueductFsm {
     return &current == &filling;
   }
 
+  auto isFillingPump() -> bool {
+    auto const& current = fsm.current_state();
+    return &current == &fillingPump;
+  }
+
   auto init(Io<>& ioParam, ScreenUi<>& uiParam) -> void {
     io = &ioParam;
     ui = &uiParam;
 
-    fsm.add_transition      (&stopped, &filling, E::FILL);
-    fsm.add_transition      (&filling, &stopped, E::SENSOR_HI_3);
-    fsm.add_transition      (&filling, &stopped, E::STOP);
+    fsm.add_transition(&stopped,     &filling,     E::VALVE_ON);
+    fsm.add_transition(&filling,     &stopped,     E::VALVE_OFF);
+    fsm.add_transition(&stopped,     &fillingPump, E::PUMP_ON);
+    fsm.add_transition(&fillingPump, &stopped,     E::VALVE_OFF);
+    fsm.add_transition(&filling,     &fillingPump, E::PUMP_ON);
+    fsm.add_transition(&fillingPump, &filling,     E::PUMP_OFF);
+
+    fsm.add_transition(&filling,     &stopped, E::SENSOR_HI_3);
+    fsm.add_transition(&fillingPump, &stopped, E::SENSOR_HI_3);
 
 
     Serial.print("[aqueduct-state-machine] initialized. initialState=");

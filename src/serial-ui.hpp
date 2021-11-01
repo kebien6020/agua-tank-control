@@ -50,8 +50,10 @@ public:
     if (cmd == "recir2_long") mtc.recir2Long();
     if (cmd == "stop") mtc.stop();
     if (cmd == "clear_alarm") mtc.clearAlarm();
-    if (cmd == "aqueduct_fill") aqueduct.fill();
-    if (cmd == "aqueduct_stop") aqueduct.stop();
+    if (cmd == "aqueduct_pump_on") aqueduct.setPump(true);
+    if (cmd == "aqueduct_pump_off") aqueduct.setPump(false);
+    if (cmd == "aqueduct_valve_on") aqueduct.setValve(true);
+    if (cmd == "aqueduct_valve_off") aqueduct.setValve(false);
   }
 private:
   MainTankControl<>& mtc;

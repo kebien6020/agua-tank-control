@@ -20,6 +20,7 @@ namespace ScreenFsm {
   auto setLastRecirTank(RecirTank tank) -> void;
   auto setLastRecirTime(chr::milliseconds time) -> void;
   auto setAlarmMsg(String const& msg) -> void;
+  auto updateAqueductInterface() -> void;
 
   namespace E {
     constexpr auto FILL_1        = Event{ 1, "FILL_1"};

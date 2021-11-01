@@ -39,6 +39,10 @@ public:
     fsm.trigger(ScreenFsm::E::ALARM);
   }
 
+  auto updateAqueductInterface() {
+    ScreenFsm::updateAqueductInterface();
+  }
+
 private:
   Fsm& fsm;
 };

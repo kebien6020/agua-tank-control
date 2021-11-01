@@ -29,46 +29,28 @@ public:
     return true;
   }
 
-  auto fill() -> bool {
-    if (io.sensorHi3 == config::sensorFull) {
-      Serial.println("[mtc] Ignoring auqeduct_fill becuse sensorHi3 is full");
+  auto setPump(bool active) {
+    if (active && io.sensorHi3 == config::sensorFull) {
+      Serial.println("[mtc] Ignoring aqueduct_pump_on becuse sensorHi3 is full");
       return false;
     }
-    fsm.trigger(AqueductFsm::E::FILL);
-    return true;
-  }
-
-  auto stop() {
-    fsm.trigger(AqueductFsm::E::STOP);
-  }
-
-  auto togglePump() -> bool {
-    if (AqueductFsm::isStopped() && io.valveIn3) {
-      return fill();
-    }
-
-    if (AqueductFsm::isFilling()) {
-      stop();
-      return false;
-    }
-
-    return false;
+    fsm.trigger(active ? AqueductFsm::E::PUMP_ON : AqueductFsm::E::PUMP_OFF);
   }
 
   auto setValve(bool active) {
-    if (!active && isFilling()) {
-      // Turn off the pump when turning off the valve
-      stop();
+    if (active && io.sensorHi3 == config::sensorFull) {
+      Serial.println("[mtc] Ignoring aqueduct_valve_on becuse sensorHi3 is full");
+      return false;
     }
-    io.valveIn3 = active;
+    fsm.trigger(active ? AqueductFsm::E::VALVE_ON : AqueductFsm::E::VALVE_OFF);
   }
 
   auto getValve() -> bool {
     return io.valveIn3;
   }
 
-  auto isFilling()-> bool {
-    return AqueductFsm::isFilling();
+  auto getPump()-> bool {
+    return io.aqueductPump;
   }
 
 private:
