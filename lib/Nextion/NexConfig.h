@@ -34,7 +34,7 @@
 /**
  * Define nexSerial for communicate with Nextion touch panel.
  */
-#define nexSerial Serial1
+#define nexSerial Serial3
 
 
 #ifdef DEBUG_SERIAL_ENABLE

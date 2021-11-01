@@ -1,22 +1,26 @@
 #include <Arduino.h>
 
+auto& nexSerial = Serial3;
+
 auto setup() -> void {
   Serial.begin(115200);
 
-  Serial1.begin(9600);
-  Serial1.print("baud=115200\xFF\xFF\xFF");
-  delay(20);
-  Serial1.flush();
+  nexSerial.begin(9600);
 
-  Serial1.begin(115200);
+  nexSerial.print("baud=115200\xFF\xFF\xFF");
   delay(20);
+  nexSerial.flush();
+  nexSerial.begin(115200);
+  delay(20);
+
+  //nexSerial.print("page 3\xFF\xFF\xFF");
 }
 
 auto loop() -> void {
   while (Serial.available()) {
-    Serial1.write(Serial.read());
+    nexSerial.write(Serial.read());
   }
-  while (Serial1.available()) {
-    Serial.write(Serial1.read());
+  while (nexSerial.available()) {
+    Serial.write(nexSerial.read());
   }
 }
