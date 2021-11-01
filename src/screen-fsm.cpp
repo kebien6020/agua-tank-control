@@ -97,11 +97,13 @@ namespace ScreenFsm {
   }
 
   auto onFilling1() -> void {
-    mtc->fill1();
+    auto const success = mtc->fill1();
+    if (!success) fsm.trigger(E::EXIT);
   }
 
   auto onFilling2() -> void {
-    mtc->fill2();
+    auto const success = mtc->fill2();
+    if (!success) fsm.trigger(E::EXIT);
   }
 
   auto duringFilling() -> void {

@@ -4,6 +4,7 @@
 
 #include "edge.hpp"
 #include "main-tank-fsm.hpp"
+#include "metrics.hpp"
 #include "screen-ui.hpp"
 #include "timer.hpp"
 
@@ -39,54 +40,48 @@ public:
     return true;
   }
 
-  auto fill1() -> void {
+  auto fill1() -> bool {
     if (io.sensorHi1 == config::sensorFull) {
       Serial.println("[mtc] Ignoring fill1 becuse sensorHi1 is full");
-      return;
+      return false;
     }
     if (io.sensorLo3 == config::sensorEmpty) {
       Serial.println("[mtc] Ignoring fill1 becuse sensorLo3 is empty");
-      return;
+      return false;
     }
 
     fsm.trigger(MainTankFsm::E::FILL_1);
+    return true;
   }
 
-  auto fill2() -> void {
+  auto fill2() -> bool {
     if (io.sensorHi2 == config::sensorFull) {
       Serial.println("[mtc] Ignoring fill2 becuse sensorHi2 is full");
-      return;
+      return false;
     }
     if (io.sensorLo3 == config::sensorEmpty) {
       Serial.println("[mtc] Ignoring fill2 becuse sensorLo3 is empty");
-      return;
+      return false;
     }
 
     fsm.trigger(MainTankFsm::E::FILL_2);
+    return true;
   }
 
   auto recir1Short() -> void {
-    fsm.trigger(MainTankFsm::E::RECIR_1);
-    recirTimer.start(config::recirTimeShort);
-    MainTankFsm::setLastTime(config::recirTimeShort);
+    recir(RecirTank::Tank1, config::recirTimeShort);
   }
 
   auto recir1Long() -> void {
-    fsm.trigger(MainTankFsm::E::RECIR_1);
-    recirTimer.start(config::recirTimeLong);
-    MainTankFsm::setLastTime(config::recirTimeLong);
+    recir(RecirTank::Tank1, config::recirTimeLong);
   }
 
   auto recir2Short() -> void {
-    fsm.trigger(MainTankFsm::E::RECIR_2);
-    recirTimer.start(config::recirTimeShort);
-    MainTankFsm::setLastTime(config::recirTimeShort);
+    recir(RecirTank::Tank2, config::recirTimeShort);
   }
 
   auto recir2Long() -> void {
-    fsm.trigger(MainTankFsm::E::RECIR_2);
-    recirTimer.start(config::recirTimeLong);
-    MainTankFsm::setLastTime(config::recirTimeLong);
+    recir(RecirTank::Tank2, config::recirTimeLong);
   }
 
   auto clearAlarm() -> void {
@@ -106,6 +101,22 @@ public:
   }
 
 private:
+
+  auto recir(RecirTank tank, chr::milliseconds time) {
+    MainTankFsm::setLastTime(time);
+    recirTimer.start(time);
+
+    auto const event = tank == RecirTank::Tank1
+      ? MainTankFsm::E::RECIR_1
+      : MainTankFsm::E::RECIR_2;
+    fsm.trigger(event);
+
+    auto const metricName = tank == RecirTank::Tank1
+      ? "recir1.time"
+      : "recir2.time";
+    metrics.sendGaugeMetric(metricName, chr::seconds{time}.count());
+  }
+
   Fsm& fsm;
   Io<>& io;
   ScreenUi<>* ui = nullptr;

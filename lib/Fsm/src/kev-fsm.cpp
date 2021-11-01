@@ -156,6 +156,8 @@ void Fsm::make_transition(Transition* transition)
   if (transition->state_from->on_exit != NULL)
     transition->state_from->on_exit();
 
+  m_current_state = transition->state_to;
+
   if (transition->on_transition != NULL)
     transition->on_transition();
 
@@ -164,8 +166,6 @@ void Fsm::make_transition(Transition* transition)
 
   if (transition->state_to->on_enter != NULL)
     transition->state_to->on_enter();
-
-  m_current_state = transition->state_to;
 
   //Initialice all timed transitions from m_current_state
   unsigned long now = millis();

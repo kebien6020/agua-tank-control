@@ -4,6 +4,7 @@
 
 #include "aliases.hpp"
 #include "screen-ui.hpp"
+#include "metrics.hpp"
 
 namespace kev {
 
@@ -66,6 +67,11 @@ namespace MainTankFsm {
 
   auto onRecirEnd() -> void {
     ui->recirEnd(lastRecirTank, lastRecirTime);
+
+    auto const metricName = lastRecirTank == RecirTank::Tank1
+        ? "recir1.completed"
+        : "recir2.completed";
+    metrics.sendCountMetric(metricName);
   }
 
   auto onAlarm() -> void {
@@ -75,6 +81,36 @@ namespace MainTankFsm {
       String{chr::minutes{config::fillSafetyTime}.count()} +
       " min).";
     ui->alarm(msg);
+
+    metrics.sendCountMetric("alarm");
+  }
+
+  auto fill1Exit() {
+    ui->exit();
+    metrics.sendCountMetric("fill1.completed");
+  }
+
+  auto fill2Exit() {
+    ui->exit();
+    metrics.sendCountMetric("fill2.completed");
+  }
+
+  auto fill1Abort() {
+    ui->exit();
+    metrics.sendCountMetric("fill1.aborted");
+  }
+
+  auto fill2Abort() {
+    ui->exit();
+    metrics.sendCountMetric("fill2.aborted");
+  }
+
+  auto recir1Abort() {
+    metrics.sendCountMetric("recir1.aborted");
+  }
+
+  auto recir2Abort() {
+    metrics.sendCountMetric("recir2.aborted");
   }
 
   auto uiExit() -> void {
@@ -107,16 +143,16 @@ namespace MainTankFsm {
     fsm.add_timed_transition(&preFilling1, &filling1,    config::preFillTime.count());
     fsm.add_transition      (&preFilling1, &stopped,     E::SENSOR_HI_1, uiExit);
     fsm.add_transition      (&preFilling1, &stopped,     E::SENSOR_LO_3, uiExit);
-    fsm.add_transition      (&filling1,    &stopped,     E::SENSOR_HI_1, uiExit);
-    fsm.add_transition      (&filling1,    &stopped,     E::SENSOR_LO_3, uiExit);
+    fsm.add_transition      (&filling1,    &stopped,     E::SENSOR_HI_1, fill1Exit);
+    fsm.add_transition      (&filling1,    &stopped,     E::SENSOR_LO_3, fill1Exit);
     fsm.add_timed_transition(&filling1,    &alarm,       config::fillSafetyTime.count());
 
     fsm.add_transition      (&stopped,     &preFilling2, E::FILL_2);
     fsm.add_timed_transition(&preFilling2, &filling2,    config::preFillTime.count());
     fsm.add_transition      (&preFilling2, &stopped,     E::SENSOR_HI_2, uiExit);
     fsm.add_transition      (&preFilling2, &stopped,     E::SENSOR_LO_3, uiExit);
-    fsm.add_transition      (&filling2,    &stopped,     E::SENSOR_HI_2, uiExit);
-    fsm.add_transition      (&filling2,    &stopped,     E::SENSOR_LO_3, uiExit);
+    fsm.add_transition      (&filling2,    &stopped,     E::SENSOR_HI_2, fill2Exit);
+    fsm.add_transition      (&filling2,    &stopped,     E::SENSOR_LO_3, fill2Exit);
     fsm.add_timed_transition(&filling2,    &alarm,       config::fillSafetyTime.count());
 
     fsm.add_transition(&stopped, &recir1, E::RECIR_1);
@@ -126,12 +162,12 @@ namespace MainTankFsm {
     fsm.add_transition(&recir2, &stopped, E::RECIR_TIME, onRecirEnd);
 
     fsm.add_transition(&alarm,       &stopped, E::CLEAR_ALARM);
-    fsm.add_transition(&preFilling1, &stopped, E::STOP, uiExit);
-    fsm.add_transition(&filling1,    &stopped, E::STOP, uiExit);
-    fsm.add_transition(&preFilling2, &stopped, E::STOP, uiExit);
-    fsm.add_transition(&filling2,    &stopped, E::STOP, uiExit);
-    fsm.add_transition(&recir1,      &stopped, E::STOP);
-    fsm.add_transition(&recir2,      &stopped, E::STOP);
+    fsm.add_transition(&preFilling1, &stopped, E::STOP, fill1Abort);
+    fsm.add_transition(&filling1,    &stopped, E::STOP, fill1Abort);
+    fsm.add_transition(&preFilling2, &stopped, E::STOP, fill2Abort);
+    fsm.add_transition(&filling2,    &stopped, E::STOP, fill2Abort);
+    fsm.add_transition(&recir1,      &stopped, E::STOP, recir1Abort);
+    fsm.add_transition(&recir2,      &stopped, E::STOP, recir2Abort);
 
     Serial.print("[main-state-machine] initialized. initialState=");
     Serial.println(fsm.current_state().name);
